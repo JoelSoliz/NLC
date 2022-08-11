@@ -3,6 +3,7 @@ from dino_runner.components.dinosaur import Dinosaur
 from dino_runner.components.obstacles.obstacle_manager import ObstacleManager
 
 from dino_runner.utils.constants import BG, ICON, RUNNING, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
+from dino_runner.utils.text_utils import draw_message_component
 
 
 FONT_STYLE = 'freesansbold.ttf'
@@ -39,6 +40,8 @@ class Game:
         # Game loop: events - update - draw
         self.obstacle_manager.reset_obstacles()
         self.playing = True
+        self.game_speed = 20
+        self.points = 0
         while self.playing:
             self.events()
             self.update()
@@ -59,7 +62,7 @@ class Game:
     def update_score(self):
         self.points += 1
         if self.points % 100 == 0:
-            self.game_speed += 5
+            self.game_speed += 1
 
     def draw(self):
         self.clock.tick(FPS)
@@ -81,19 +84,20 @@ class Game:
         self.x_pos_bg -= self.game_speed
 
     def draw_score(self):
-        font = pygame.font.Font(FONT_STYLE, 22)
-        text = font.render(f"Points: {self.points}", True, (0,0,0))
-        text_rect = text.get_rect()
-        text_rect.center = (1000, 50)
-        self.screen.blit(text, text_rect)
+        draw_message_component(
+            f"Points: {self.points}",
+            self.screen,
+            font_size=22,
+            pos_x_center=1000,
+            pos_y_center=50
+        )
 
     def handle_key_events_on_menu(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
-
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 self.run()
 
     def show_menu(self):
@@ -102,13 +106,19 @@ class Game:
         half_screen_width = SCREEN_WIDTH // 2
 
         if self.death_count == 0:
-            font = pygame.font.Font(FONT_STYLE, 30)
-            text = font.render("Press any key to start", True, (0,0,0))
-            text_rect = text.get_rect()
-            text_rect.center = (half_screen_width, half_screen_height)
-            self.screen.blit(text, text_rect)
+            draw_message_component("Press any key to start", self.screen)
         elif self.death_count > 0:
-            pass
+            draw_message_component("Press any key to restart", self.screen)
+            draw_message_component(
+                f"Your Score: {self.points}",
+                self.screen,
+                pos_y_center=half_screen_height + 50
+            )
+            draw_message_component(
+                f"Death count: {self.death_count}",
+                self.screen,
+                pos_y_center=half_screen_height + 100
+            )
 
         self.screen.blit(RUNNING[0], (half_screen_width - 20, half_screen_height - 140))
 
